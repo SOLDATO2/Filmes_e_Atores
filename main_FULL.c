@@ -2,10 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+// Felipe Porto Caldeira do Nascimento
+// Alexandre Wahl
+// Gabriel Consulo
+// Felipe Pinheiro
+
+
 struct node {
     int id;
     struct node *next;
 };
+
 
 struct actor {
     int id;
@@ -13,11 +21,13 @@ struct actor {
     struct node *id_movies;
 };
 
+
 struct movie {
     int id;
     char *title;
     struct node *neighbors;
 };
+
 
 void adicionar_filme(struct actor *a, int id_filme) {
     struct node *novo_nodo = (struct node*) malloc(sizeof(struct node));
@@ -26,15 +36,34 @@ void adicionar_filme(struct actor *a, int id_filme) {
     a->id_movies = novo_nodo;
 }
 
+
+char* remove_quotes(char* str) {
+    char* result = strdup(str);
+    char* src = str;
+    char* dst = result;
+    while (*src) {
+        if (*src != '\"') {
+            *dst = *src;
+            dst++;
+        }
+        src++;
+    }
+    *dst = '\0';
+    return result;
+}
+
+
 int main() {
     int size_ArrayArtistas = 1;
     struct actor *ArrayArtistas = (struct actor *) malloc(size_ArrayArtistas * sizeof(struct actor));
 
-    FILE *file_atores = fopen("name.basics.tsv", "r");
+
+    FILE *file_atores = fopen("tsv_mini\\name.basics.tsv", "r");
     if (!file_atores) {
         printf("\nErro ao abrir tsv de atores\n");
         return 1;
     }
+
 
     char line[1024];
     fgets(line, sizeof(line), file_atores); // Ignorar linha 1
@@ -48,15 +77,18 @@ int main() {
         char *primaryProfession = strtok(NULL, "\t");
         char *knownForTitles = strtok(NULL, "\t");
 
+
         if (id_str && name && knownForTitles) {
             if (count_actors >= size_ArrayArtistas) {
                 size_ArrayArtistas *= 2;
                 ArrayArtistas = (struct actor *) realloc(ArrayArtistas, size_ArrayArtistas * sizeof(struct actor));
             }
 
+
             ArrayArtistas[count_actors].id = atoi(id_str + 2);
             ArrayArtistas[count_actors].name = strdup(name);
             ArrayArtistas[count_actors].id_movies = NULL;
+
 
             char *movie_title = strtok(knownForTitles, ",");
             while (movie_title) {
@@ -68,16 +100,20 @@ int main() {
         }
     }
 
+
     printf("Array Atores gerado\n");
+
 
     int size_ArrayFilmes = 1;
     struct movie *ArrayFilmes = (struct movie *) malloc(size_ArrayFilmes * sizeof(struct movie));
 
-    FILE *file_filmes = fopen("title.basics.tsv", "r");
+
+    FILE *file_filmes = fopen("tsv_mini\\title.basics.tsv", "r");
     if (!file_filmes) {
         printf("\nErro ao abrir tsv de filmes\n");
         return 1;
     }
+
 
     char line_filmes[1024];
     fgets(line_filmes, sizeof(line_filmes), file_filmes); // Ignorar linha 1
@@ -94,16 +130,20 @@ int main() {
         char *runtimeMinutes = strtok(NULL, "\t");
         char *genres = strtok(NULL, "\t");
 
-        if (titleType[0] != 's') {
+
+        //if (titleType[0] != 's') {
+        if (strcmp(titleType, "movie") == 0){
             if (id_str && primaryTitle) {
                 if (count_movies >= size_ArrayFilmes) {
                     size_ArrayFilmes *= 2;
                     ArrayFilmes = (struct movie *) realloc(ArrayFilmes, size_ArrayFilmes * sizeof(struct movie));
                 }
 
+
                 ArrayFilmes[count_movies].id = atoi(id_str + 2);
                 ArrayFilmes[count_movies].title = strdup(primaryTitle);
                 ArrayFilmes[count_movies].neighbors = NULL;
+
 
                 count_movies++;
             }
@@ -111,8 +151,10 @@ int main() {
     }
     printf("Array Filmes gerado\n");
 
+
     fclose(file_atores);
     fclose(file_filmes);
+
 
     int id_filme = 0;
     for (int ator = 0; ator < count_actors; ator++) { // O(n)
@@ -150,6 +192,7 @@ int main() {
                                 check_duplicate = check_duplicate->next;
                             }
 
+
                             if (!duplicate_found) {
                                 struct node *new_node = (struct node *)malloc(sizeof(struct node));
                                 new_node->id = current_head->id;
@@ -158,16 +201,17 @@ int main() {
                                 current_neighbor = new_node;
                             }
 
+
                             current_head = current_head->next;
                         }
                     }
                     break;
 
+
                 }
-                if (ArrayFilmes[middle].id > id_filme) {
+                else if (ArrayFilmes[middle].id > id_filme) {
                     end = middle - 1;
-                }
-                if (ArrayFilmes[middle].id < id_filme) {
+                } else{
                     start = middle + 1;
                 }
             }
@@ -180,6 +224,7 @@ int main() {
     }
     printf("Array Filmes alimentado\n");
 
+
     //Montagem grafo final
     FILE *output_file = fopen("input.dot", "w");
     if (!output_file) {
@@ -188,20 +233,26 @@ int main() {
     }
     printf("Montando grafo...\n");
 
-    fprintf(output_file, "graph { concentrate=true\n");
-    for (int i = 0; i < count_movies; i++) {
-        char *current_movie_title = ArrayFilmes[i].title;
-        struct node *current_node = ArrayFilmes[i].neighbors;
 
-        while (current_node) {
+    fprintf(output_file, "graph { concentrate=true\n");
+    //for (int i = 0; i < count_movies; i++) {
+    for (int i = 0; i < count_movies; i++) {
+        char *current_movie_title = remove_quotes(ArrayFilmes[i].title);     // nome do filme atual no indicie de ArrayFilmes
+        struct node *current_node = ArrayFilmes[i].neighbors; // nodo atual da lista encadeada
+
+
+        while (current_node) { // enquanto exisitir elementos na lista encadeada
             int neighbor_id = current_node->id;
             //busca binaria para encontrar o nome do filme com o id do neighbor
             int start = 0, end = count_movies;
             while (start <= end) {
                 int middle = (start + end) / 2;
                 if (ArrayFilmes[middle].id == neighbor_id) {
-                    char *neighbor_movie_title = ArrayFilmes[middle].title;
-                    fprintf(output_file, " \"%s\" -- \"%s\";\n", current_movie_title, neighbor_movie_title);
+                    char *neighbor_movie_title = remove_quotes(ArrayFilmes[middle].title);
+                    if (strcmp(neighbor_movie_title, current_movie_title) != 0) {
+                        fprintf(output_file, " \"%s\" -- \"%s\";\n", current_movie_title, neighbor_movie_title);
+                    }
+                    free(neighbor_movie_title);
                     break;
                 }
                 if (ArrayFilmes[middle].id > neighbor_id) {
@@ -212,7 +263,9 @@ int main() {
             }
             current_node = current_node->next;
         }
+        free(current_movie_title);
     }
+
 
     
     fprintf(output_file, "}\n");
@@ -222,5 +275,9 @@ int main() {
 
     printf("Fim\n");
 
+
     return 0;
 }
+
+
+ 

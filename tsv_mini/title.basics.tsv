@@ -1,0 +1,6 @@
+tconst	titleType	primaryTitle	originalTitle	isAdult	startYear	endYear	runtimeMinutes	genres
+tt0000001	movie	Carmencita	Carmencita	0	1894	\N	1	Documentary,Short
+tt1000001	movie	Shared Experience	Shared Experience	0	2024	\N	120	Drama
+tt1000002	movie	Another Journey	Another Journey	0	2024	\N	110	Adventure
+tt1000003	movie	Crossing Paths	Crossing Paths	0	2024	\N	115	Thriller
+tt1000004	movie	New Horizons	New Horizons	0	2024	\N	125	Sci-Fi
